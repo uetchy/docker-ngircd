@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+NGIRCD_NAME=${NGIRCD_NAME:-irc.localhost.local}
+NGIRCD_INFO=${NGIRCD_INFO:-Your Priorities IRC server}
+NGIRCD_PASSWORD=${NGIRCD_PASSWORD:-}
+NGIRCD_MOTD_PHRASE=${NGIRCD_MOTD_PHRASE:-Hello. This is the Debian default MOTD sentence}
+
+# ADD ngircd.conf /etc/ngircd/ngircd.conf
+# ADD ngircd.motd /etc/ngircd/ngircd.motd
+# ADD supervisor.conf /etc/supervisor/conf.d/ngircd.conf
+sed 's,{{NGIRCD_NAME}},'"${NGIRCD_NAME}"',g' -i /etc/ngircd/ngircd.conf
+sed 's,{{NGIRCD_INFO}},'"${NGIRCD_INFO}"',g' -i /etc/ngircd/ngircd.conf
+sed 's,{{NGIRCD_PASSWORD}},'"${NGIRCD_PASSWORD}"',g' -i /etc/ngircd/ngircd.conf
+sed 's,{{NGIRCD_MOTD_PHRASE}},'"${NGIRCD_MOTD_PHRASE}"',g' -i /etc/ngircd/ngircd.conf
+
+appStart () {
+  # start supervisord
+  echo "Starting supervisord..."
+  /usr/bin/supervisord
+}
+
+appHelp() {
+  echo "Available options:"
+  echo " app:start          - Starts the gitlab server (default)"
+  echo " app:help           - Displays the help"
+  echo " [command]          - Execute the specified linux command eg. bash."
+}
+
+case "$1" in
+  app:start)
+    appStart
+    ;;
+  app:help)
+    appHelp
+    ;;
+  *)
+    if [ -x $1 ]; then
+      $1
+    else
+      prog=$(which $1)
+      if [ -n "${prog}" ] ; then
+        shift 1
+        $prog $@
+      else
+        appHelp
+      fi
+    fi
+    ;;
+esac
+
+exit 0
